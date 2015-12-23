@@ -12,15 +12,24 @@ class ProxyRetrieve():
 
         content = doc.summary(html_partial=False)
 
-        r.headers['Content-Length'] = len(content)
+        # FIXME pythons socket lib breaks on a unicode object, find out how to properly fix that
+        content = content.encode('ascii', 'backslashreplace')
 
-        return (r.headers, content)
+        headers = r.headers
+
+        if 'Content-Encoding' in headers:
+            del headers['Content-Encoding']
+
+        headers['Content-Length'] = len(content)
+
+        return (headers, content)
 
 class ProxyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
+    retriever = None
+
     def do_GET(self):
-        r = ProxyRetrieve()
-        (headers, content) = r.handle()
+        (headers, content) = self.retriever.handle()
 
         self.send_response(200)
         self._write_headers(headers)
@@ -35,11 +44,18 @@ class ProxyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 
 def main():
-    server_address = ('', 8080)
+    address = ''
+    port = 8080
+    server_address = ('', port)
+    ProxyRequestHandler.retriever = ProxyRetrieve()
     httpd = BaseHTTPServer.HTTPServer(server_address, ProxyRequestHandler)
 
-    print 'Serving...'
-    httpd.serve_forever()
+    print 'Serving on %s:%s...' % (address, port)
+
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print 'Interrupted, quitting...'
 
 if __name__ == '__main__':
     main()
