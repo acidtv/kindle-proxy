@@ -12,7 +12,7 @@ class ProxyRetrieve():
         doc = Document(r.text)
 
         content = doc.summary(html_partial=True)
-        content = self.prettify(content)
+        content = self.prettify(doc, content)
 
         if len(content) < 1000:
             content = r.text
@@ -21,7 +21,7 @@ class ProxyRetrieve():
 
         return content
 
-    def prettify(self, content):
+    def prettify(self, doc, content):
         content = u'<html><head><title>%s</title></head><body><h1>%s</h1>%s</body></html>' \
             % (doc.title(), doc.short_title(), content)
 
