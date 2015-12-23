@@ -1,7 +1,6 @@
 # kindle-proxy
 
-Installing
-==========
+## Installing
 
 ```shell
 $ apt-get install libxml2 libxml2-dev libxslt1-dev python-dev virtualenv pip
@@ -12,8 +11,7 @@ $ source env/bin/activate
 $ pip install -r requirements.txt
 ```
 
-Running
-=======
+## Running
 
 ```shell
 $ cd kindle-proxy/
