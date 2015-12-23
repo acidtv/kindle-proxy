@@ -11,6 +11,11 @@ $ source env/bin/activate
 $ pip install -r requirements.txt
 ```
 
+If problems with lxml:
+
+* Check this page https://stackoverflow.com/questions/18334366/out-of-memory-issue-in-installing-packages-on-ubuntu-server
+* Install this package: lib32z1-dev
+
 ## Running
 
 ```shell

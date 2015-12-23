@@ -21,7 +21,7 @@ class ProxyRetrieve():
 
         return content
 
-    def prettify(content):
+    def prettify(self, content):
         content = u'<html><head><title>%s</title></head><body><h1>%s</h1>%s</body></html>' \
             % (doc.title(), doc.short_title(), content)
 
