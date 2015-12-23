@@ -1,35 +1,46 @@
 #!/usr/bin/python
 
+import argparse
 import requests
 import BaseHTTPServer
 from readability.readability import Document
 
 class ProxyRetrieve():
 
-    def handle(self):
-        r = requests.get('http://azarius.vagrant/news/580/Farewell_Wubbo_Ockels/')
+    def handle(self, path):
+        r = requests.get(path)
         doc = Document(r.text)
 
-        content = doc.summary(html_partial=False)
+        content = doc.summary(html_partial=True)
+        content = self.prettify(content)
 
-        # FIXME pythons socket lib breaks on a unicode object, find out how to properly fix that
-        content = content.encode('ascii', 'backslashreplace')
+        if len(content) < 1000:
+            content = r.text
 
-        headers = r.headers
+        content = content.encode('utf8')
 
-        if 'Content-Encoding' in headers:
-            del headers['Content-Encoding']
+        return content
 
-        headers['Content-Length'] = len(content)
+    def prettify(content):
+        content = u'<html><head><title>%s</title></head><body><h1>%s</h1>%s</body></html>' \
+            % (doc.title(), doc.short_title(), content)
 
-        return (headers, content)
+        return content
 
 class ProxyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     retriever = None
 
     def do_GET(self):
-        (headers, content) = self.retriever.handle()
+        content = self.retriever.handle(self.path)
+
+        if type(content) is not str:
+            raise Exception('Returned content should be of type str, otherwise it cannot be written to a socket.')
+
+        headers = {
+            'Content-Length': len(content),
+            'Content-Type': 'text/html; charset=utf-8'
+        }
 
         self.send_response(200)
         self._write_headers(headers)
@@ -44,8 +55,12 @@ class ProxyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 
 def main():
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('-p', dest='port', type=int, default=8080, help='The port number to listen on')
+    args = parser.parse_args()
+
     address = ''
-    port = 8080
+    port = args.port
     server_address = ('', port)
     ProxyRequestHandler.retriever = ProxyRetrieve()
     httpd = BaseHTTPServer.HTTPServer(server_address, ProxyRequestHandler)
